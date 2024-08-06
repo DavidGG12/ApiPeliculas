@@ -5,6 +5,8 @@ namespace ApiPeliculas.Repositorio.IRepositorio
 {
     public interface ICategoriasRepositorio
     {
+        //Esta interface es la estructura que va a tener la clase con la que vamos a trabajar, en este caso, con el repositorio
+        //Tenemos las funciones con las que vamos a hacer un CRUD
         ICollection<Categorias>GetCategorias();
         Categorias GetCategorias(int CategoriaId);
         bool ExisteCategoria(int CategoriaId);

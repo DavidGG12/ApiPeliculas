@@ -9,6 +9,8 @@ namespace ApiPeliculas.Repositorio
 {
     public class CategoriasRepositorio : ICategoriasRepositorio
     {
+        //Con ayuda de la interface creada "ICategoriasRepositorio" vamos a empezar a trabajar para poder hacer nuestro CRUD
+        //Esta es una instancia para utilizar la base de datos
         private readonly ApplicationDbContext _bd;
 
         public CategoriasRepositorio(ApplicationDbContext db)
@@ -40,6 +42,8 @@ namespace ApiPeliculas.Repositorio
 
         public bool ExisteCategoria(int CategoriaId)
         {
+            //Esta función va a arrojar un boleano dependiendo si encuentra concordancias dentro de la base de datos con lo que se está
+            //consultando
             return _bd.Categorias.Any(c => c.idCategoria == CategoriaId);
         }
 
