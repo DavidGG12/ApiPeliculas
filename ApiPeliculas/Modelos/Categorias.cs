@@ -17,7 +17,7 @@ namespace ApiPeliculas.Modelos
 
         //La propiedad [Required] es para decir que es un valor que no puede ser nulo.
         [Required]
-        public string NombreCategoria { get; set; }
+        public string? NombreCategoria { get; set; }
 
         [Required]
         public DateTime FechaCreacion { get; set; }
