@@ -13,9 +13,15 @@ namespace ApiPeliculas.PeliculaMapper
     {
         public PeliculasMapper()
         {
+            //Mappers de Categorías
             CreateMap<Categorias, CategoriasDto>().ReverseMap();
             CreateMap<Categorias, CrearCategoriasDto>().ReverseMap();
             CreateMap<Categorias, EliminarCategoriasDto>().ReverseMap();
+            
+            //Mappers de Peliculas
+            CreateMap<Peliculas, PeliculasDto>().ReverseMap();
+            CreateMap<Peliculas, CrearPeliculasDto>().ReverseMap();
+            CreateMap<Peliculas, EliminarPeliculasDto>().ReverseMap();
         }
     }
 }
