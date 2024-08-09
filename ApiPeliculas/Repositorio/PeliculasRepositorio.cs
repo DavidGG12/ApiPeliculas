@@ -20,7 +20,13 @@ namespace ApiPeliculas.Repositorio
         public bool ActualizarPelicula(Peliculas peliculas)
         {
             peliculas.FechaCreacion = DateTime.Now;
-            _bd.Peliculas.Update(peliculas);
+
+            //Arreglar problema del PUT
+            var peliculaExistente = _bd.Peliculas.Find(peliculas.PeliculaID);
+
+            if (peliculaExistente != null) _bd.Entry(peliculaExistente).CurrentValues.SetValues(peliculas);
+            else _bd.Peliculas.Update(peliculas);
+
             return Guardar();
         }
 

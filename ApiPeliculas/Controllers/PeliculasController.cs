@@ -2,6 +2,7 @@
 using ApiPeliculas.Modelos.Dtos;
 using ApiPeliculas.Repositorio.IRepositorio;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -32,6 +33,7 @@ namespace ApiPeliculas.Controllers
          */
         #region Método GET
         [HttpGet("all")]
+        [ResponseCache(Duration = 30)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetPeliculas()
@@ -50,6 +52,7 @@ namespace ApiPeliculas.Controllers
 
         #region Método GET {id}
         [HttpGet("id={peliculaID:int}", Name = "GetPeliculas")]
+        [ResponseCache(Duration = 30)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -68,7 +71,8 @@ namespace ApiPeliculas.Controllers
         
         #region Método POST
         [HttpPost]
-        [ProducesResponseType(201, Type = typeof(PeliculasDto))]
+        [Authorize(Roles = "admin")]
+        //[ProducesResponseType(201, Type = typeof(PeliculasDto))]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -102,12 +106,12 @@ namespace ApiPeliculas.Controllers
             //ModelState.AddModelError("", $"El id de categoria es: {pelicula.categoriaID}");
 
             //return StatusCode(404, ModelState); 
-            return CreatedAtRoute("GetPelicula", new { categoriaID = pelicula.PeliculaID }, pelicula);
+            return CreatedAtRoute("GetPelicula", new { peliculaID = pelicula.PeliculaID }, pelicula);
         }
         #endregion
 
-        /*
         #region Método PATCH
+        [Authorize(Roles = "admin")]
         [HttpPatch("{peliculaID:int}", Name = "ActualizarPelicula")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -118,8 +122,11 @@ namespace ApiPeliculas.Controllers
 
             if (peliculasDto == null || peliculaID != peliculasDto.PeliculaID) return BadRequest(ModelState);
 
-            var pelicula = _mapper.Map<Peliculas>(peliculasDto);
+            var peliculaExistente = _plRepo.GetPeliculas(peliculaID);
+            if (peliculaExistente == null) return NotFound($"No se encontró la pelicula con el ID {peliculaID}");
 
+            var pelicula = _mapper.Map<Peliculas>(peliculasDto);
+            
             if (!_plRepo.ActualizarPelicula(pelicula))
             {
                 ModelState.AddModelError("", $"Algo salió mal en la actualización {pelicula.NombrePelicula}");
@@ -131,26 +138,69 @@ namespace ApiPeliculas.Controllers
         #endregion
 
         #region Metodo DELETE
-        [HttpDelete("{categoriaID:int}", Name = "BorrarCategoria")]
+        [Authorize(Roles = "admin")]
+        [HttpDelete("{peliculaID:int}", Name = "BorrarPelicula")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public IActionResult BorrarCategoria(int categoriaID)
+        public IActionResult BorrarPelicula(int peliculaID)
         {
-            if (!_plRepo.ExisteCategoria(categoriaID)) return NotFound();
+            if (!_plRepo.ExistePelicula(peliculaID)) return NotFound();
 
-            var categoria = _plRepo.GetCategorias(categoriaID);
+            var pelicula = _plRepo.GetPeliculas(peliculaID);
 
-            if(!_plRepo.BorrarCategoria(categoria))
+            if(!_plRepo.BorrarPelicula(pelicula))
             {
-                ModelState.AddModelError("", $"Algo salió mal con el borrado del registro: {categoria.NombreCategoria}");
+                ModelState.AddModelError("", $"Algo salió mal con el borrado del registro: {pelicula.NombrePelicula}");
                 return StatusCode(500, ModelState);
             }
 
             return NoContent();
         }
-        #endregion*/
+        #endregion
+
+        #region Método Búsqueda de Películas
+        [HttpGet("pelicula_categoria={categoriaID:int}")]
+        [ResponseCache(Duration = 30)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult GetPeliculasEnCategoria(int categoriaID)
+        {
+            var listaPeliculas = _plRepo.GetPeliculasEnCategoria(categoriaID);
+            if(listaPeliculas == null) return NotFound();
+
+            var itemPeliculas = new List<PeliculasDto>();
+            foreach(var pelicula in listaPeliculas)
+            {
+                itemPeliculas.Add(_mapper.Map<PeliculasDto>(pelicula));
+            }
+            return Ok(itemPeliculas);
+        }
+        #endregion
+
+        #region Método Búsqueda
+        [HttpGet("search/", Name = "Buscar")]
+        [ResponseCache(Duration = 30)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult Buscar(string busqueda)
+        {
+            try
+            {
+                var resultado = _plRepo.BuscarPelicula(busqueda);
+                if(resultado.Any()) return Ok(resultado);
+
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error recuperando datos");
+            }
+        }
+        #endregion
     }
 }

@@ -2,6 +2,7 @@
 using ApiPeliculas.Modelos.Dtos;
 using ApiPeliculas.Repositorio.IRepositorio;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -30,8 +31,15 @@ namespace ApiPeliculas.Controllers
          */
         #region Método GET
         [HttpGet("all")]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        /*
+         * La línea del código "ResponseCache", es para poder hacer uso de la caché
+         * y guardar cierta información dentro, para no generar tanta carga al servidor.
+         */
+        [ResponseCache(Duration = 30)]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult GetCategorias()
         {
             /*
@@ -52,6 +60,7 @@ namespace ApiPeliculas.Controllers
 
         #region Método GET {id}
         [HttpGet("id={categoriaID:int}", Name = "GetCategorias")]
+        [ResponseCache(Duration = 30)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -70,6 +79,7 @@ namespace ApiPeliculas.Controllers
 
         #region Método POST
         [HttpPost]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -100,6 +110,7 @@ namespace ApiPeliculas.Controllers
         #endregion
 
         #region Método PATCH
+        [Authorize(Roles = "admin")]
         [HttpPatch("{categoriaID:int}", Name = "ActualizarPatchCategoria")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -123,6 +134,7 @@ namespace ApiPeliculas.Controllers
         #endregion
 
         #region Método PUT
+        [Authorize(Roles = "admin")]
         [HttpPut("{categoriaID:int}", Name = "ActualizarPutCategoria")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -152,6 +164,7 @@ namespace ApiPeliculas.Controllers
         #endregion
 
         #region Metodo DELETE
+        [Authorize(Roles = "admin")]
         [HttpDelete("{categoriaID:int}", Name = "BorrarCategoria")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
